@@ -54,6 +54,7 @@ class _MarkdownPreviewerState extends State<MarkdownPreviewer> {
     _controller.text ='';
         }
 
+  // notification logic for save and retrieve actions, shows a message for 2 seconds
   void _save() {
     setState(() {
       _notification = 'Successfully saved markdown!';
@@ -79,6 +80,8 @@ class _MarkdownPreviewerState extends State<MarkdownPreviewer> {
 
   String renderHTML = "";
 
+// shows a dialog to enter a key for saving markdown
+
   void _showSaveDialog() {
   showDialog(
     context: context,
@@ -97,6 +100,7 @@ class _MarkdownPreviewerState extends State<MarkdownPreviewer> {
   );
 }
 
+// shows a dialog to enter a key for retrieving markdown
 void _showRetrieveDialog() {
   showDialog(
     context: context,
@@ -153,6 +157,7 @@ void _showRetrieveDialog() {
                     ),
                   ),
                   const Spacer(),
+                  // save button
                   ElevatedButton(
                     onPressed: _showSaveDialog,
                     style: ElevatedButton.styleFrom(
@@ -168,6 +173,7 @@ void _showRetrieveDialog() {
                     child: const Text('Save'),
                   ),
                   const SizedBox(width: 12),
+                  // retrieve button
                   ElevatedButton(
                     onPressed: _showRetrieveDialog,
                     style: ElevatedButton.styleFrom(
@@ -185,6 +191,7 @@ void _showRetrieveDialog() {
                 ],
               ),
               const SizedBox(height: 18),
+              // notification banner
               if (_notification.isNotEmpty)
                 Container(
                   width: double.infinity,
@@ -208,6 +215,8 @@ void _showRetrieveDialog() {
                 child: Row(
                   children: [
                     Expanded(
+                      // markdown input area
+
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
@@ -274,6 +283,9 @@ void _showRetrieveDialog() {
                       ),
                     ),
                     const SizedBox(width: 18),
+                    
+                    // preview area
+
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
