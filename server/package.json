@@ -13,11 +13,13 @@
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
     "ejs": "^4.0.1",
     "express": "^5.2.1",
     "markdown": "^0.5.0",
     "marked": "^17.0.3",
     "mongoose": "^9.2.1",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "router": "^2.2.0"
   }
 }

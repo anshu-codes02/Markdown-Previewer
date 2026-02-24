@@ -1,34 +1,24 @@
 const express= require("express");
 const app=express();
 const cors=require("cors");
-const {marked}=require("marked");
-
-
+const mongoose=require("mongoose");
+require("dotenv").config();
 
 app.use(cors());
 app.use(express.json());
 
-app.post("/render", (req, res)=>{
-    try{
-        console.log("getting request");
-    const {markdown}=req.body;
-    
+app.use('/markdown', require("./routes/api"));
 
-    if(!markdown) {
-        return res.status(404).json({success: false, message: "value null"});
-    }
+mongoose.connect(process.env.MONGO_URI)
+  .then(()=>{ 
+    console.log("MongoDB connected");
 
-    const html=marked(markdown);
-    return res.status(200).json({success: true, data: html});
-}catch(err){
-    console.log(err);
-    return res.status(500).json({success: false, message: "server error"});
-}
-});
+    app.listen(process.env.PORT, ()=>{
+     console.log("listening");
+    });
+   }).catch(err => console.error("MongoDB error", err));
 
-app.listen(8000, ()=>{
-    console.log("listening");
-});
+
 
 
 

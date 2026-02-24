@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:http/http.dart' as http;
+import 'package:markdown_fl/services/markdown_service.dart';
+import 'package:markdown_fl/widgets/key_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_html_table/flutter_html_table.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF151C26),
-        fontFamily: 'Fira Mono',
+        fontFamily: null,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
           brightness: Brightness.dark,
@@ -43,6 +45,7 @@ class MarkdownPreviewer extends StatefulWidget {
 
 class _MarkdownPreviewerState extends State<MarkdownPreviewer> {
   final TextEditingController _controller = TextEditingController();
+  final ScrollController _previewScrollController = ScrollController();
   String _notification = '';
 
   @override
@@ -65,7 +68,7 @@ class _MarkdownPreviewerState extends State<MarkdownPreviewer> {
 
   void _retrieve() {
     setState(() {
-      _notification = 'Successfully retrieved markdown for key: test1';
+      _notification = 'Successfully retrieved markdown';
       });
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
@@ -76,20 +79,59 @@ class _MarkdownPreviewerState extends State<MarkdownPreviewer> {
 
   String renderHTML = "";
 
-  Future<void> renderMarkDown(String markdown) async {
-    final response = await http.post(
-      Uri.parse("http://localhost:8000/render"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"markdown": markdown}),
-    );
-    print(jsonDecode(response.body));
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        renderHTML = data['data'];
-      });
-    }
-  }
+  void _showSaveDialog() {
+  showDialog(
+    context: context,
+    builder: (_) => KeyDialog(
+      title: "Save Markdown",
+      hintText: "Enter key name",
+      onSubmit: (key) async {
+        final success = await MarkdownService.saveMarkdown(
+          key,
+          _controller.text,
+        );
+
+        if (success) _save();
+      },
+    ),
+  );
+}
+
+void _showRetrieveDialog() {
+  showDialog(
+    context: context,
+    builder: (_) => KeyDialog(
+      title: "Retrieve Markdown",
+      hintText: "Enter key to load",
+      onSubmit: (key) async {
+        final markdown = await MarkdownService.retrieveMarkdown(key);
+
+        if (markdown != null) {
+          _controller.value = TextEditingValue(
+            text: markdown,
+            selection: TextSelection.collapsed(offset: markdown.length),
+          );
+
+          final html = await MarkdownService.renderMarkdown(markdown);
+          if (html != null) {
+            setState(() => renderHTML = html);
+          }
+
+          _retrieve();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            
+            const SnackBar(
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.fromLTRB(16, 16, 16, 0),
+              content: Text("Key not found ")),
+          );
+        }
+      },
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +154,7 @@ class _MarkdownPreviewerState extends State<MarkdownPreviewer> {
                   ),
                   const Spacer(),
                   ElevatedButton(
-                    onPressed: _save,
+                    onPressed: _showSaveDialog,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2563EB),
                       padding: const EdgeInsets.symmetric(
@@ -127,7 +169,7 @@ class _MarkdownPreviewerState extends State<MarkdownPreviewer> {
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton(
-                    onPressed: _retrieve,
+                    onPressed: _showRetrieveDialog,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF22C55E),
                       padding: const EdgeInsets.symmetric(
@@ -198,9 +240,17 @@ class _MarkdownPreviewerState extends State<MarkdownPreviewer> {
                             Expanded(
                               child: TextField(
                                 controller: _controller,
-                                onChanged: (_) => setState(() {
-                                  renderMarkDown(_controller.text);
-                                }),
+                                onChanged: (_) async {
+                                  final html = await MarkdownService.renderMarkdown(_controller.text );
+                                  setState((){
+                                  if (html != null) {
+                                    renderHTML = html;
+                                  }
+                                  else {
+                                    renderHTML = "";
+                                  }
+                                });
+                                },
                                 maxLines: null,
                                 expands: true,
                                 textAlignVertical: TextAlignVertical.top,
@@ -249,20 +299,47 @@ class _MarkdownPreviewerState extends State<MarkdownPreviewer> {
                                   color: const Color(0xFF232B39),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: Html(
-                                  data: renderHTML,
-                                  style: {
-                                      "h1": Style(fontSize: FontSize(28), fontWeight: FontWeight.bold, color: Colors.white),
-                                      "h2": Style(fontSize: FontSize(22), fontWeight: FontWeight.bold, color: Colors.white),
-                                      "h3": Style(fontSize: FontSize(18), fontWeight: FontWeight.bold, color: Colors.white),
-                                      "p": Style(fontSize: FontSize(15), color: Colors.white),
-                                      "code": Style(fontFamily: 'Fira Mono', color: Colors.white, backgroundColor: Color(0xFF232B39)),
-                                      "pre": Style(backgroundColor: Color(0xFF232B39)),
-                                      "blockquote": Style(color: Colors.grey),
-                                      "ul": Style(color: Colors.white),
-                                      "a": Style(color: Color(0xFF2563EB), textDecoration: TextDecoration.underline
+                                child: Scrollbar(
+                                  controller: _previewScrollController,
+                                  thumbVisibility: true,
+                                  child: SingleChildScrollView(
+                                    controller: _previewScrollController,
+                                    padding: const EdgeInsets.all(12),
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                     minWidth: MediaQuery.of(context).size.width,
+                                       ),
+                                      
+                                      child: Html(
+                                        data: renderHTML,
+                                        extensions: [
+                                          const TableHtmlExtension(),
+                                        ],
+                                        onLinkTap: (url, attributes, element) async {
+                                          if (url != null) {
+                                          final uri = Uri.parse(url);
+                                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                           }
+                                        },
+                                        style: {
+                                            "h1": Style(fontSize: FontSize(28), fontWeight: FontWeight.bold, color: Colors.white),
+                                            "h2": Style(fontSize: FontSize(22), fontWeight: FontWeight.bold, color: Colors.white),
+                                            "h3": Style(fontSize: FontSize(18), fontWeight: FontWeight.bold, color: Colors.white),
+                                            "p": Style(fontSize: FontSize(15), color: Colors.white),
+                                            "code": Style(fontFamily: 'Fira Mono', color: Colors.white, backgroundColor: Color(0xFF232B39)),
+                                            "pre": Style(backgroundColor: Color(0xFF232B39)),
+                                            "blockquote": Style(color: Colors.grey),
+                                            "ul": Style(color: Colors.white),
+                                            "a": Style(color: Color(0xFF2563EB), textDecoration: TextDecoration.underline),
+                                            "table": Style(backgroundColor: const Color(0xFF151C26),),
+                                            "th": Style(padding: HtmlPaddings.all(8),backgroundColor: const Color(0xFF1E293B),fontWeight: FontWeight.bold,),
+                                           "td": Style(
+                                                padding: HtmlPaddings.all(8),
+                                               ),
+                                        },
+                                      ),
                                     ),
-                                  },
+                                  ),
                                 ),
                               ),
                             ),
