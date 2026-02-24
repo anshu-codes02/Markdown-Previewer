@@ -4,7 +4,25 @@ A modern Markdown Previewer built with **Flutter** and a **Node.js + MongoDB** b
 
 Write Markdown, view a live HTML preview, and persist your notes using unique keys.
 
----
+
+## 🎥Demo Video
+
+[![Markdown Demo](https://img.shields.io/badge/Watch%20Demo-Video-red?style=for-the-badge&logo=youtube)](https://drive.google.com/file/d/1DMAHiYoVgPxg9sJm4WroupMCO8RJocsC/view?usp=sharing)
+
+## 📸 Screenshots
+
+<div align="center">
+  <img src="screenshots/home.png" alt="Home" width="300"/>
+</div>
+
+<div align="center">
+  <img src="screenshots/markdown.png" alt="Markdown Preview" width="300"/>
+</div>
+
+<div align="center">
+  <img src="screenshots/save.png" alt="Save" width="300"/>
+</div>
+
 
 ## 🚀 Features
 

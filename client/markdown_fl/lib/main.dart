@@ -170,7 +170,7 @@ void _showRetrieveDialog() {
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
-                    child: const Text('Save'),
+                    child: const Text('Save', style: TextStyle(color: Colors.white)),
                   ),
                   const SizedBox(width: 12),
                   // retrieve button
@@ -186,7 +186,7 @@ void _showRetrieveDialog() {
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
-                    child: const Text('Retrieve'),
+                    child: const Text('Retrieve', style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),

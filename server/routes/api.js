@@ -29,6 +29,20 @@ router.post("/save", async (req, res) => {
 
   try {
 
+     if (!key || key.trim() === "") {
+    return res.status(400).json({
+      success: false,
+      message: "Key is required"
+    });
+  }
+
+  if (!markdown || markdown.trim() === "") {
+    return res.status(400).json({
+      success: false,
+      message: "Markdown content is required"
+    });
+  }
+
     //update if keys same
     const note = await Note.findOneAndUpdate(
       {key: key},
